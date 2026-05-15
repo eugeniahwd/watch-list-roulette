@@ -41,6 +41,7 @@ export default function MovieDetailPage() {
   const [watched, setWatched] = useState(false);
   const [rating, setRating] = useState(0);
   const [alreadySaved, setAlreadySaved] = useState(false);
+  const [inWatchlist, setInWatchlist] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -68,6 +69,10 @@ export default function MovieDetailPage() {
       setRating(parsed.rating ?? 0);
       if (parsed.watched) setAlreadySaved(true);
     }
+    // Cek watchlist
+  const watchlistRaw = localStorage.getItem("watchlist");
+  const watchlist = watchlistRaw ? JSON.parse(watchlistRaw) : [];
+  setInWatchlist(watchlist.some(w => w.tmdb_id === id));
   }, [id]);
 
   function handleSave() {
@@ -96,6 +101,26 @@ export default function MovieDetailPage() {
 
     setAlreadySaved(true);
   }
+
+  function handleWatchlist() {
+  const watchlistRaw = localStorage.getItem("watchlist");
+  const watchlist = watchlistRaw ? JSON.parse(watchlistRaw) : [];
+
+  if (inWatchlist) {
+    const updated = watchlist.filter(w => w.tmdb_id !== id);
+    localStorage.setItem("watchlist", JSON.stringify(updated));
+    setInWatchlist(false);
+    } else {
+    watchlist.unshift({
+      tmdb_id: id,
+      title: movie?.title,
+      poster: movie?.poster_path,
+      added_at: new Date().toISOString(),
+    });
+    localStorage.setItem("watchlist", JSON.stringify(watchlist));
+    setInWatchlist(true);
+        }
+    }
 
   if (loading) return (
     <main style={{ minHeight: "100vh", background: "#09090b", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -183,75 +208,90 @@ export default function MovieDetailPage() {
           </div>
         </div>
 
-        {/* ── WATCHED + RATING SECTION ── */}
-        <div style={{
-          marginTop: "40px",
-          background: "#18181b", border: "1px solid #27272a",
-          borderRadius: "20px", padding: "28px 32px",
-        }}>
-          <h3 style={{ color: "white", fontSize: "18px", fontWeight: "800", marginBottom: "20px" }}>
-            Have you watched this movie?
-          </h3>
+        {/* ── WATCHED + RATING + WATCHLIST SECTION ── */}
+<div style={{
+  marginTop: "40px",
+  background: "#18181b", border: "1px solid #27272a",
+  borderRadius: "20px", padding: "28px 32px",
+}}>
+  <h3 style={{ color: "white", fontSize: "18px", fontWeight: "800", marginBottom: "20px" }}>
+    Have you watched this movie?
+  </h3>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+  <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <button
-                onClick={() => { setWatched(!watched); setAlreadySaved(false); }}
-                style={{
-                  padding: "10px 24px", borderRadius: "100px",
-                  border: watched ? "1.5px solid #22d3ee" : "1.5px solid #27272a",
-                  background: watched ? "rgba(34,211,238,0.1)" : "#09090b",
-                  color: watched ? "#22d3ee" : "#71717a",
-                  cursor: "pointer", fontSize: "14px", fontWeight: "700",
-                  transition: "all 0.2s",
-                }}
-              >
-                {watched ? "✓ Watched" : "Mark as Watched"}
-              </button>
-              {watched && (
-                <span style={{ color: "#52525b", fontSize: "13px" }}>
-                  Nice! How would you rate it?
-                </span>
-              )}
-            </div>
+    <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+      <button
+        onClick={() => { setWatched(!watched); setAlreadySaved(false); }}
+        style={{
+          padding: "10px 24px", borderRadius: "100px",
+          border: watched ? "1.5px solid #22d3ee" : "1.5px solid #27272a",
+          background: watched ? "rgba(34,211,238,0.1)" : "#09090b",
+          color: watched ? "#22d3ee" : "#71717a",
+          cursor: "pointer", fontSize: "14px", fontWeight: "700",
+          transition: "all 0.2s",
+        }}
+      >
+        {watched ? "✓ Watched" : "Mark as Watched"}
+      </button>
 
-            {watched && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <span style={{ color: "#a1a1aa", fontSize: "13px", fontWeight: "600" }}>Your Rating</span>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <StarRating value={rating} onChange={setRating} />
-                  {rating > 0 && (
-                    <span style={{ color: "#71717a", fontSize: "13px" }}>
-                      {["", "Poor", "Fair", "Good", "Great", "Amazing!"][rating]}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
+      <button
+        onClick={handleWatchlist}
+        style={{
+          padding: "10px 24px", borderRadius: "100px",
+          border: inWatchlist ? "1.5px solid #a78bfa" : "1.5px solid #27272a",
+          background: inWatchlist ? "rgba(167,139,250,0.1)" : "#09090b",
+          color: inWatchlist ? "#a78bfa" : "#71717a",
+          cursor: "pointer", fontSize: "14px", fontWeight: "700",
+          transition: "all 0.2s",
+        }}
+      >
+        {inWatchlist ? "✓ In Watchlist" : "+ Add to Watchlist"}
+      </button>
 
-            {watched && (
-              <div>
-                <button
-                  onClick={handleSave}
-                  disabled={alreadySaved}
-                  style={{
-                    padding: "12px 28px", borderRadius: "12px",
-                    background: alreadySaved ? "#18181b" : "#06b6d4",
-                    border: alreadySaved ? "1px solid #22d3ee" : "none",
-                    color: alreadySaved ? "#22d3ee" : "#000",
-                    cursor: alreadySaved ? "not-allowed" : "pointer",
-                    fontSize: "14px", fontWeight: "800",
-                    transition: "all 0.3s",
-                  }}
-                >
-                  {alreadySaved ? "✓ Saved to History" : "Save to Watch History"}
-                </button>
-              </div>
-            )}
+      {watched && (
+        <span style={{ color: "#52525b", fontSize: "13px" }}>
+          Nice! How would you rate it?
+        </span>
+      )}
+    </div>
 
-          </div>
+    {watched && (
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <span style={{ color: "#a1a1aa", fontSize: "13px", fontWeight: "600" }}>Your Rating</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <StarRating value={rating} onChange={setRating} />
+          {rating > 0 && (
+            <span style={{ color: "#71717a", fontSize: "13px" }}>
+              {["", "Poor", "Fair", "Good", "Great", "Amazing!"][rating]}
+            </span>
+          )}
         </div>
+      </div>
+    )}
+
+    {watched && (
+      <div>
+        <button
+          onClick={handleSave}
+          disabled={alreadySaved}
+          style={{
+            padding: "12px 28px", borderRadius: "12px",
+            background: alreadySaved ? "#18181b" : "#06b6d4",
+            border: alreadySaved ? "1px solid #22d3ee" : "none",
+            color: alreadySaved ? "#22d3ee" : "#000",
+            cursor: alreadySaved ? "not-allowed" : "pointer",
+            fontSize: "14px", fontWeight: "800",
+            transition: "all 0.3s",
+          }}
+        >
+          {alreadySaved ? "✓ Saved to History" : "Save to Watch History"}
+        </button>
+      </div>
+    )}
+
+  </div>
+</div>
 
         {/* Details row */}
         <div style={{
