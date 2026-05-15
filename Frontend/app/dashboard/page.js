@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 const TMDB_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 
-const NAV_LINKS = ["Home", "Roulette", "Time-Crunch", "Watch-Party", "History"];
+const NAV_LINKS = ["Home", "Roulette", "Time-Crunch", "Watch-Party", "Watchlist", "History"];
 
 async function fetchSection(url) {
   const res = await fetch(url);
@@ -141,6 +141,7 @@ export default function DashboardPage() {
       "Roulette": "/roulette",
       "Time-Crunch": "/time-crunch",
       "Watch-Party": "/watch-party",
+      "Watchlist": "/watchlist",
       "History": "/history",
     };
     if (routes[link]) router.push(routes[link]);

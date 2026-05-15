@@ -33,7 +33,7 @@ async function addToWatchlist(user_id, tmdb_id, media_type = "movie") {
     return res.json();
 }
 
-const NAV_LINKS = ["Home", "Roulette", "Time-Crunch", "Watch-Party", "History"];
+const NAV_LINKS = ["Home", "Roulette", "Time-Crunch", "Watch-Party", "Watchlist", "History"];
 
 const GenreIcons = {
     Action: (color) => (
@@ -346,9 +346,22 @@ export default function RoulettePage() {
     function handleSpinAgain() { setResult(null); setAdded(false); handleSpin(); }
 
     async function handleAddWatchlist() {
-        if (!result) return;
-        await addToWatchlist(USER_ID, result.id, "movie");
-        setAdded(true);
+    if (!result) return;
+
+     const watchlistRaw = localStorage.getItem("watchlist");
+     const watchlist = watchlistRaw ? JSON.parse(watchlistRaw) : [];
+     const exists = watchlist.some(w => w.tmdb_id === String(result.id));
+
+     if (!exists) {
+    watchlist.unshift({
+      tmdb_id: String(result.id),
+      title: result.title,
+      poster: result.poster_path,
+      added_at: new Date().toISOString(),
+    });
+    localStorage.setItem("watchlist", JSON.stringify(watchlist));
+     }
+    setAdded(true);
     }
 
     const durationLabel =
