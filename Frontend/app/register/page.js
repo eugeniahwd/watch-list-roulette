@@ -13,22 +13,32 @@ export default function RegisterPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-  async function handleSubmit() {
-  if (form.password.length < 5) {
-    setError("Password must be at least 5 characters!");
-    return;
-  }
-  if (form.password !== form.confirm) {
-    setError("Passwords don't match!");
-    return;
-  }
+ async function handleSubmit() {
+  if (form.password.length < 5) return setError("Password minimal 5 karakter!");
+  if (form.password !== form.confirm) return setError("Password tidak cocok!");
   setError("");
   setLoading(true);
-  // TODO: sambung ke API nanti
-  setTimeout(() => {
-    setLoading(false);
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: form.username,
+        email: form.email,
+        password: form.password,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Register gagal");
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("username", data.username);
     router.push("/onboarding");
-  }, 1500);
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
 }
 
   const inputStyle = {

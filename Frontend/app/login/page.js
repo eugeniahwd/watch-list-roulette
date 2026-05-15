@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 export default function LoginPage() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
 
   function handleChange(e) {
@@ -13,26 +14,39 @@ export default function LoginPage() {
   }
 
   async function handleSubmit() {
-  setLoading(true);
-  // TODO: sambung ke API nanti
-  setTimeout(() => {
-    setLoading(false);
-    router.push("/onboarding");
-  }, 1500);
-}
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: form.username, password: form.password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Login gagal");
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("username", data.username);
+      router.push("/onboarding");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const inputStyle = {
-  width: "100%", padding: "12px 16px",
-  borderRadius: "10px", border: "1px solid #27272a",
-  background: "#09090b", color: "white",
-  fontSize: "14px", outline: "none",
-  boxSizing: "border-box",
-};
+    width: "100%", padding: "12px 16px",
+    borderRadius: "10px", border: "1px solid #27272a",
+    background: "#09090b", color: "white",
+    fontSize: "14px", outline: "none",
+    boxSizing: "border-box",
+  };
 
-const labelStyle = {
-  color: "#a1a1aa", fontSize: "13px",
-  fontWeight: "600", display: "block", marginBottom: "6px",
-};
+  const labelStyle = {
+    color: "#a1a1aa", fontSize: "13px",
+    fontWeight: "600", display: "block", marginBottom: "6px",
+  };
 
   return (
     <main style={{
@@ -79,14 +93,14 @@ const labelStyle = {
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
 
             <div>
-                <label style={labelStyle}>Username</label>
-                <input
-                    name="username"
-                    value={form.username}
-                    onChange={handleChange}
-                    placeholder="e.g. moviebuff99"
-                    style={inputStyle}
-                />
+              <label style={labelStyle}>Username</label>
+              <input
+                name="username"
+                value={form.username}
+                onChange={handleChange}
+                placeholder="e.g. moviebuff99"
+                style={inputStyle}
+              />
             </div>
 
             <div>
@@ -101,17 +115,17 @@ const labelStyle = {
                 value={form.password}
                 onChange={handleChange}
                 placeholder="••••••••"
-                style={{
-                  width: "100%", padding: "12px 16px",
-                  borderRadius: "10px", border: "1px solid #27272a",
-                  background: "#09090b", color: "white",
-                  fontSize: "14px", outline: "none",
-                  boxSizing: "border-box",
-                }}
+                style={inputStyle}
               />
             </div>
 
           </div>
+
+          {error && (
+            <p style={{ color: "#f87171", fontSize: "13px", textAlign: "center", marginTop: "12px" }}>
+              {error}
+            </p>
+          )}
 
           <button
             onClick={handleSubmit}
