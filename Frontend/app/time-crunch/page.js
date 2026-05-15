@@ -13,7 +13,6 @@ const PRESETS = [
 ];
 
 async function fetchMoviesByDuration(maxMinutes) {
-  // TMDB filter: with_runtime.lte dan gte
   const min = Math.max(20, maxMinutes - 20);
   const url = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_KEY}&sort_by=popularity.desc&with_runtime.gte=${min}&with_runtime.lte=${maxMinutes}&vote_count.gte=100`;
   const res = await fetch(url);
@@ -28,10 +27,7 @@ function MovieCard({ movie, onClick }) {
   return (
     <div
       onClick={() => onClick(movie.id)}
-      style={{
-        flexShrink: 0, width: "140px", cursor: "pointer",
-        transition: "transform 0.2s",
-      }}
+      style={{ flexShrink: 0, width: "140px", cursor: "pointer", transition: "transform 0.2s" }}
       onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
       onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
     >
@@ -83,8 +79,7 @@ export default function TimeCrunchPage() {
         display: "flex", alignItems: "center", padding: "0 48px", height: "64px", gap: "16px",
       }}>
         <button onClick={() => router.push("/dashboard")} style={{
-          background: "none", border: "none", color: "#71717a",
-          cursor: "pointer", fontSize: "14px",
+          background: "none", border: "none", color: "#71717a", cursor: "pointer", fontSize: "14px",
         }}>← Back</button>
         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
           <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22d3ee", display: "inline-block" }} />
@@ -133,8 +128,7 @@ export default function TimeCrunchPage() {
             </span>
           </div>
           <input
-            type="range"
-            min={20} max={240} step={5}
+            type="range" min={20} max={240} step={5}
             value={minutes}
             onChange={e => setMinutes(Number(e.target.value))}
             style={{ width: "100%", accentColor: "#22d3ee", cursor: "pointer" }}
@@ -143,12 +137,6 @@ export default function TimeCrunchPage() {
             <span style={{ color: "#52525b", fontSize: "12px" }}>20 min</span>
             <span style={{ color: "#52525b", fontSize: "12px" }}>4 hours</span>
           </div>
-
-          {minutes < 20 && (
-            <p style={{ color: "#f87171", fontSize: "13px", marginTop: "12px" }}>
-              ⚠️ Minimum 20 menit
-            </p>
-          )}
         </div>
 
         {/* Search Button */}
@@ -161,9 +149,7 @@ export default function TimeCrunchPage() {
               background: loading ? "#164e63" : "#06b6d4",
               color: loading ? "#a1a1aa" : "#000",
               border: "none", cursor: "pointer",
-              fontSize: "15px", fontWeight: "800",
-              transition: "all 0.2s",
-              opacity: minutes < 20 ? 0.5 : 1,
+              fontSize: "15px", fontWeight: "800", transition: "all 0.2s",
             }}
           >
             {loading ? "Finding films..." : `Find Films ≤ ${minutes} min →`}
@@ -174,14 +160,10 @@ export default function TimeCrunchPage() {
         {searched && !loading && (
           <div>
             <h2 style={{ fontSize: "20px", fontWeight: "800", marginBottom: "6px" }}>
-              {movies.length > 0
-                ? `${movies.length} films found`
-                : "No films found"}
+              {movies.length > 0 ? `${movies.length} films found` : "No films found"}
             </h2>
             <p style={{ color: "#52525b", fontSize: "13px", marginBottom: "20px" }}>
-              {movies.length > 0
-                ? `Fits in your ${minutes}-minute window`
-                : "Try adjusting the duration"}
+              {movies.length > 0 ? `Fits in your ${minutes}-minute window` : "Try adjusting the duration"}
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
               {movies.map(m => (
@@ -190,6 +172,7 @@ export default function TimeCrunchPage() {
             </div>
           </div>
         )}
+
       </div>
     </main>
   );

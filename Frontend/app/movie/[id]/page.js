@@ -96,6 +96,7 @@ export default function MovieDetailPage() {
               <span style={{ color: "#71717a", fontSize: "14px" }}>{genres}</span>
               <span style={{ color: "#71717a", fontSize: "14px" }}>• {runtime}</span>
             </div>
+
             {/* Rating */}
             <div style={{
               display: "inline-flex", alignItems: "center", gap: "8px",
@@ -169,7 +170,7 @@ export default function MovieDetailPage() {
                 <div
                   key={m.id}
                   onClick={() => router.push(`/movie/${m.id}`)}
-                  style={{ flexShrink: 0, width: "130px", cursor: "pointer" }}
+                  style={{ flexShrink: 0, width: "130px", cursor: "pointer", transition: "transform 0.2s" }}
                   onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
                   onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
                 >
@@ -184,6 +185,7 @@ export default function MovieDetailPage() {
             </div>
           </div>
         )}
+
       </div>
     </main>
   );
