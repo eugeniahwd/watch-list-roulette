@@ -7,6 +7,29 @@ const TMDB_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 const BASE = "https://api.themoviedb.org/3";
 const IMG = "https://image.tmdb.org/t/p";
 
+function StarRating({ value, onChange }) {
+  const [hovered, setHovered] = useState(0);
+
+  return (
+    <div style={{ display: "flex", gap: "4px" }}>
+      {[1, 2, 3, 4, 5].map(star => (
+        <button
+          key={star}
+          onClick={() => onChange(star)}
+          onMouseEnter={() => setHovered(star)}
+          onMouseLeave={() => setHovered(0)}
+          style={{
+            background: "none", border: "none", cursor: "pointer",
+            fontSize: "28px", padding: "0",
+            color: star <= (hovered || value) ? "#facc15" : "#3f3f46",
+            transition: "color 0.15s",
+          }}
+        >★</button>
+      ))}
+    </div>
+  );
+}
+
 export default function MovieDetailPage() {
   const router = useRouter();
   const { id } = useParams();
@@ -14,6 +37,10 @@ export default function MovieDetailPage() {
   const [cast, setCast] = useState([]);
   const [similar, setSimilar] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [watched, setWatched] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [alreadySaved, setAlreadySaved] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -33,6 +60,43 @@ export default function MovieDetailPage() {
     load();
   }, [id]);
 
+  useEffect(() => {
+    const stored = localStorage.getItem(`movie_${id}`);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      setWatched(parsed.watched ?? false);
+      setRating(parsed.rating ?? 0);
+      if (parsed.watched) setAlreadySaved(true);
+    }
+  }, [id]);
+
+  function handleSave() {
+    localStorage.setItem(`movie_${id}`, JSON.stringify({
+      watched,
+      rating,
+      tmdb_id: id,
+      title: movie?.title,
+      poster: movie?.poster_path,
+      savedAt: new Date().toISOString(),
+    }));
+
+    const historyRaw = localStorage.getItem("watch_history");
+    const history = historyRaw ? JSON.parse(historyRaw) : [];
+    const exists = history.find(h => h.tmdb_id === id);
+    if (!exists && watched) {
+      history.unshift({
+        tmdb_id: id,
+        title: movie?.title,
+        poster: movie?.poster_path,
+        rating,
+        watched_at: new Date().toISOString(),
+      });
+      localStorage.setItem("watch_history", JSON.stringify(history));
+    }
+
+    setAlreadySaved(true);
+  }
+
   if (loading) return (
     <main style={{ minHeight: "100vh", background: "#09090b", display: "flex", alignItems: "center", justifyContent: "center" }}>
       <p style={{ color: "#71717a" }}>Loading...</p>
@@ -49,7 +113,7 @@ export default function MovieDetailPage() {
   const poster = movie.poster_path ? `${IMG}/w342${movie.poster_path}` : null;
   const year = movie.release_date?.slice(0, 4);
   const runtime = movie.runtime ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m` : "N/A";
-  const rating = movie.vote_average?.toFixed(1);
+  const rating_tmdb = movie.vote_average?.toFixed(1);
   const genres = movie.genres?.map(g => g.name).join(", ");
 
   return (
@@ -97,27 +161,95 @@ export default function MovieDetailPage() {
               <span style={{ color: "#71717a", fontSize: "14px" }}>• {runtime}</span>
             </div>
 
-            {/* Rating */}
+            {/* TMDB Rating */}
             <div style={{
               display: "inline-flex", alignItems: "center", gap: "8px",
               background: "#18181b", border: "1px solid #27272a",
               borderRadius: "12px", padding: "8px 16px", marginBottom: "20px",
             }}>
-              <span style={{ color: "#22d3ee", fontSize: "20px", fontWeight: "800" }}>{rating}</span>
+              <span style={{ color: "#22d3ee", fontSize: "20px", fontWeight: "800" }}>{rating_tmdb}</span>
               <span style={{ color: "#71717a", fontSize: "13px" }}>/ 10 · {movie.vote_count?.toLocaleString()} votes</span>
             </div>
 
-            {/* Tagline */}
             {movie.tagline && (
               <p style={{ color: "#52525b", fontSize: "14px", fontStyle: "italic", marginBottom: "12px" }}>
                 "{movie.tagline}"
               </p>
             )}
 
-            {/* Overview */}
             <p style={{ color: "#a1a1aa", fontSize: "15px", lineHeight: 1.7, maxWidth: "600px" }}>
               {movie.overview}
             </p>
+          </div>
+        </div>
+
+        {/* ── WATCHED + RATING SECTION ── */}
+        <div style={{
+          marginTop: "40px",
+          background: "#18181b", border: "1px solid #27272a",
+          borderRadius: "20px", padding: "28px 32px",
+        }}>
+          <h3 style={{ color: "white", fontSize: "18px", fontWeight: "800", marginBottom: "20px" }}>
+            Have you watched this movie?
+          </h3>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <button
+                onClick={() => { setWatched(!watched); setAlreadySaved(false); }}
+                style={{
+                  padding: "10px 24px", borderRadius: "100px",
+                  border: watched ? "1.5px solid #22d3ee" : "1.5px solid #27272a",
+                  background: watched ? "rgba(34,211,238,0.1)" : "#09090b",
+                  color: watched ? "#22d3ee" : "#71717a",
+                  cursor: "pointer", fontSize: "14px", fontWeight: "700",
+                  transition: "all 0.2s",
+                }}
+              >
+                {watched ? "✓ Watched" : "Mark as Watched"}
+              </button>
+              {watched && (
+                <span style={{ color: "#52525b", fontSize: "13px" }}>
+                  Nice! How would you rate it?
+                </span>
+              )}
+            </div>
+
+            {watched && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <span style={{ color: "#a1a1aa", fontSize: "13px", fontWeight: "600" }}>Your Rating</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <StarRating value={rating} onChange={setRating} />
+                  {rating > 0 && (
+                    <span style={{ color: "#71717a", fontSize: "13px" }}>
+                      {["", "Poor", "Fair", "Good", "Great", "Amazing!"][rating]}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {watched && (
+              <div>
+                <button
+                  onClick={handleSave}
+                  disabled={alreadySaved}
+                  style={{
+                    padding: "12px 28px", borderRadius: "12px",
+                    background: alreadySaved ? "#18181b" : "#06b6d4",
+                    border: alreadySaved ? "1px solid #22d3ee" : "none",
+                    color: alreadySaved ? "#22d3ee" : "#000",
+                    cursor: alreadySaved ? "not-allowed" : "pointer",
+                    fontSize: "14px", fontWeight: "800",
+                    transition: "all 0.3s",
+                  }}
+                >
+                  {alreadySaved ? "✓ Saved to History" : "Save to Watch History"}
+                </button>
+              </div>
+            )}
+
           </div>
         </div>
 
