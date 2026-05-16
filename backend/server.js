@@ -12,6 +12,7 @@ app.use('/api/onboarding', require('./routes/onboarding'));
 app.use('/api/recommendations', require('./routes/recommendations'));
 app.use('/api/watchlist', require('./routes/watchlist'));
 app.use('/api/history', require('./routes/history'));
+app.use("/api/watch-party", require("./routes/watchParty"));
 
 app.get('/', (req, res) => res.send('Watch-List Roulette Backend Running!'));
 
