@@ -23,11 +23,25 @@ export default function LoginPage() {
         body: JSON.stringify({ username: form.username, password: form.password }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Login gagal");
+if (!res.ok) throw new Error(data.error || "Login gagal");
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("username", data.username);
-      router.push("/onboarding");
+localStorage.setItem("token", data.token);
+localStorage.setItem("username", data.username);
+localStorage.setItem("user_id", data.user_id);
+
+// cek apakah user sudah pernah onboarding
+const prefRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/onboarding/check`, {
+  headers: { Authorization: `Bearer ${data.token}` },
+});
+const prefData = await prefRes.json();
+
+if (prefData.hasPreferences) {
+  // nyimpen genres ke localStorage buat dipake di dashboard
+  localStorage.setItem("user_genres", JSON.stringify(prefData.genres));
+  router.push("/dashboard");
+} else {
+  router.push("/onboarding");
+}
     } catch (err) {
       setError(err.message);
     } finally {

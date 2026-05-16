@@ -156,7 +156,7 @@ function Section({ title, movies, onMovieClick }) {
           padding: "0 48px",
         }}>
           {movies.map(m => (
-            <MovieCard key={m.id} movie={m} onClick={onMovieClick} />
+            <MovieCard key={m.id} movie={m} onMovieClick={onMovieClick} />
           ))}
         </div>
 
@@ -190,19 +190,39 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function loadAll() {
-      const BASE = `https://api.themoviedb.org/3`;
-      const KEY = `api_key=${TMDB_KEY}`;
+  const BASE = `https://api.themoviedb.org/3`;
+  const KEY = `api_key=${TMDB_KEY}`;
 
-      const [popular, romanceComedy, actionThriller, kdrama, recommendations] = await Promise.all([
-        fetchSection(`${BASE}/movie/popular?${KEY}`),
-        fetchSection(`${BASE}/discover/movie?${KEY}&with_genres=10749,35&sort_by=popularity.desc`),
-        fetchSection(`${BASE}/discover/movie?${KEY}&with_genres=28,53&sort_by=popularity.desc`),
-        fetchSection(`${BASE}/discover/tv?${KEY}&with_original_language=ko&sort_by=popularity.desc`),
-        fetchSection(`${BASE}/movie/top_rated?${KEY}`),
-      ]);
+  // Ambil genre dari localStorage yang disimpan waktu login
+  const storedGenres = localStorage.getItem("user_genres");
+  const userGenres = storedGenres ? JSON.parse(storedGenres) : [];
 
-      setSections({ recommendations, popular, romanceComedy, actionThriller, kdrama });
-    }
+  // Map genre name ke TMDB genre ID
+  const GENRE_MAP = {
+    Action: 28, Comedy: 35, Horror: 27, Romance: 10749,
+    "Sci-Fi": 878, Thriller: 53, Drama: 18, Animation: 16,
+    Documentary: 99, Fantasy: 14, Crime: 80, Mystery: 9648,
+  };
+
+  const genreIds = userGenres
+    .map(g => GENRE_MAP[g])
+    .filter(Boolean)
+    .join(",");
+
+  const recUrl = genreIds
+    ? `${BASE}/discover/movie?${KEY}&with_genres=${genreIds}&sort_by=vote_average.desc&vote_count.gte=100`
+    : `${BASE}/movie/top_rated?${KEY}`;
+
+  const [recommendations, popular, romanceComedy, actionThriller, kdrama] = await Promise.all([
+    fetchSection(recUrl),
+    fetchSection(`${BASE}/movie/popular?${KEY}`),
+    fetchSection(`${BASE}/discover/movie?${KEY}&with_genres=10749,35&sort_by=popularity.desc`),
+    fetchSection(`${BASE}/discover/movie?${KEY}&with_genres=28,53&sort_by=popularity.desc`),
+    fetchSection(`${BASE}/discover/tv?${KEY}&with_original_language=ko&sort_by=popularity.desc`),
+  ]);
+
+  setSections({ recommendations, popular, romanceComedy, actionThriller, kdrama });
+}
     loadAll();
   }, []);
 

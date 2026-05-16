@@ -202,9 +202,35 @@ export default function OnboardingPage() {
     });
   }
 
-  function handleFinish() {
+  async function handleFinish() {
+  const token = localStorage.getItem("token");
+  
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/onboarding`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        genres: [...selectedGenres],
+        platforms: [...selectedPlatforms],
+        pref_mood: mood,
+      }),
+    });
+
+    if (!res.ok) throw new Error("Gagal simpan preferensi");
+
+    // Simpan juga ke localStorage buat dashboard
+    localStorage.setItem("user_genres", JSON.stringify([...selectedGenres]));
+    router.push("/dashboard");
+  } catch (err) {
+    console.error(err);
+    // Tetap redirect walau gagal
+    localStorage.setItem("user_genres", JSON.stringify([...selectedGenres]));
     router.push("/dashboard");
   }
+}
 
   const btnPrimary = {
     padding: "12px 28px", borderRadius: "100px",

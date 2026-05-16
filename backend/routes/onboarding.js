@@ -40,4 +40,20 @@ router.post('/', authMiddleware, async (req, res) => {
   }
 });
 
+router.get('/check', authMiddleware, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT genre FROM user_genres WHERE user_id = $1',
+      [req.user.user_id]
+    );
+    if (result.rows.length === 0) {
+      return res.json({ hasPreferences: false, genres: [] });
+    }
+    const genres = result.rows.map(r => r.genre);
+    res.json({ hasPreferences: true, genres });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
