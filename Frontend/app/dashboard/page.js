@@ -13,47 +13,118 @@ async function fetchSection(url) {
   return data.results?.filter(m => m.poster_path) ?? [];
 }
 
-function MovieCard({ movie, onClick }) {
+function MovieCard({ movie, onMovieClick }) {
+  const [showMenu, setShowMenu] = useState(false);
   const title = movie.title || movie.name;
   const rating = movie.vote_average?.toFixed(1);
   const poster = `https://image.tmdb.org/t/p/w342${movie.poster_path}`;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  async function addToWatchlist(e) {
+    e.stopPropagation();
+    const token = localStorage.getItem("token");
+    if (token) {
+      await fetch(`${API_URL}/api/watchlist`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ tmdb_id: movie.id, media_type: "movie" }),
+      });
+    } else {
+      const raw = localStorage.getItem("watchlist");
+      const list = raw ? JSON.parse(raw) : [];
+      if (!list.some(w => w.tmdb_id === String(movie.id))) {
+        list.unshift({ tmdb_id: String(movie.id), title: movie.title || movie.name, poster: movie.poster_path, added_at: new Date().toISOString() });
+        localStorage.setItem("watchlist", JSON.stringify(list));
+      }
+    }
+    setShowMenu(false);
+  }
+
+  async function addToHistory(e) {
+    e.stopPropagation();
+    const token = localStorage.getItem("token");
+    if (token) {
+      await fetch(`${API_URL}/api/history`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ tmdb_id: movie.id, media_type: "movie" }),
+      });
+    } else {
+      const raw = localStorage.getItem("watch_history");
+      const list = raw ? JSON.parse(raw) : [];
+      if (!list.some(h => h.tmdb_id === String(movie.id))) {
+        list.unshift({ tmdb_id: String(movie.id), title: movie.title || movie.name, poster: movie.poster_path, rating: 0, watched_at: new Date().toISOString() });
+        localStorage.setItem("watch_history", JSON.stringify(list));
+      }
+    }
+    setShowMenu(false);
+  }
 
   return (
     <div
-      onClick={() => onClick && onClick(movie.id)}
-      style={{
-        flexShrink: 0, width: "150px", cursor: "pointer",
-        transition: "transform 0.2s",
-      }}
+      style={{ flexShrink: 0, width: "150px", cursor: "pointer", transition: "transform 0.2s", position: "relative" }}
       onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
       onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
     >
-      <div style={{ position: "relative", borderRadius: "8px", overflow: "hidden", marginBottom: "8px" }}>
-        <img src={poster} alt={title} style={{ width: "100%", height: "220px", objectFit: "cover", display: "block" }} />
+      <div style={{ position: "relative", borderRadius: "8px", overflow: "visible", marginBottom: "8px" }}>
+        <div style={{ borderRadius: "8px", overflow: "hidden" }}>
+          <img
+            src={poster} alt={title}
+            onClick={() => onMovieClick && onMovieClick(movie.id)}
+            style={{ width: "100%", height: "220px", objectFit: "cover", display: "block" }}
+          />
+        </div>
         <div style={{
           position: "absolute", bottom: 0, left: 0, right: 0,
           background: "linear-gradient(to top, rgba(0,0,0,0.9), transparent)",
-          padding: "20px 8px 8px",
+          padding: "20px 8px 8px", borderRadius: "0 0 8px 8px",
+          pointerEvents: "none",
         }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ color: "#22d3ee", fontSize: "11px", fontWeight: "700" }}>
-              {rating} ★
-            </span>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", pointerEvents: "auto" }}>
+            <span
+              onClick={() => onMovieClick && onMovieClick(movie.id)}
+              style={{ color: "#22d3ee", fontSize: "11px", fontWeight: "700" }}
+            >{rating} ★</span>
             <button
-              onClick={e => e.stopPropagation()}
+              onClick={e => { e.stopPropagation(); setShowMenu(!showMenu); }}
               style={{
                 background: "rgba(255,255,255,0.15)", border: "none",
                 borderRadius: "50%", width: "24px", height: "24px",
                 color: "white", fontSize: "14px", cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center",
-              }}>+</button>
+              }}
+            >+</button>
           </div>
         </div>
+
+        {showMenu && (
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              position: "absolute", bottom: "36px", right: "8px", zIndex: 50,
+              background: "#18181b", border: "1px solid #27272a",
+              borderRadius: "10px", overflow: "hidden", minWidth: "160px",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+            }}
+          >
+            <button onClick={addToWatchlist} style={{ width: "100%", padding: "10px 14px", background: "none", border: "none", color: "#a78bfa", fontSize: "13px", fontWeight: "600", cursor: "pointer", textAlign: "left" }}>
+              🔖 Add to Watchlist
+            </button>
+            <div style={{ height: "1px", background: "#27272a" }} />
+            <button onClick={addToHistory} style={{ width: "100%", padding: "10px 14px", background: "none", border: "none", color: "#22d3ee", fontSize: "13px", fontWeight: "600", cursor: "pointer", textAlign: "left" }}>
+              ✓ Mark as Watched
+            </button>
+            <div style={{ height: "1px", background: "#27272a" }} />
+            <button onClick={() => setShowMenu(false)} style={{ width: "100%", padding: "10px 14px", background: "none", border: "none", color: "#52525b", fontSize: "13px", cursor: "pointer", textAlign: "left" }}>
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
-      <p style={{
-        color: "#a1a1aa", fontSize: "12px", fontWeight: "500",
-        whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-      }}>{title}</p>
+      <p
+        onClick={() => onMovieClick && onMovieClick(movie.id)}
+        style={{ color: "#a1a1aa", fontSize: "12px", fontWeight: "500", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+      >{title}</p>
     </div>
   );
 }

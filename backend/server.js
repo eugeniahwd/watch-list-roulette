@@ -10,7 +10,8 @@ app.use(express.json());
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/onboarding', require('./routes/onboarding'));
 app.use('/api/recommendations', require('./routes/recommendations'));
-//app.use('/api/watchlist', require('./routes/watchlist'));
+app.use('/api/watchlist', require('./routes/watchlist'));
+app.use('/api/history', require('./routes/history'));
 
 app.get('/', (req, res) => res.send('Watch-List Roulette Backend Running!'));
 
