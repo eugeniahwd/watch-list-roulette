@@ -57,13 +57,15 @@ export default function WatchlistPage() {
         <div style={{ marginBottom: "32px" }}>
           <h1 style={{ fontSize: "28px", fontWeight: "800", marginBottom: "6px" }}>My Watchlist</h1>
           <p style={{ color: "#71717a", fontSize: "14px" }}>
-            {watchlist.length > 0 ? `${watchlist.length} film mau kamu tonton` : "Belum ada film di watchlist"}
+            {watchlist.length > 0 ? `${watchlist.length} films in your watchlist` : "No films in your watchlist"}
           </p>
         </div>
 
         {watchlist.length === 0 && (
           <div style={{ textAlign: "center", padding: "80px 24px", background: "#18181b", border: "1px solid #27272a", borderRadius: "20px" }}>
-            <span style={{ fontSize: "48px", display: "block", marginBottom: "16px" }}>🔖</span>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: "block", margin: "0 auto 16px" }}>
+              <path d="M5 3h14a1 1 0 0 1 1 1v17l-7-3.5L6 21V4a1 1 0 0 1 1-1z" stroke="#52525b" strokeWidth="1.5" strokeLinejoin="round"/>
+            </svg>
             <p style={{ color: "#52525b", fontSize: "16px", marginBottom: "20px" }}>Belum ada film di watchlist kamu.</p>
             <button onClick={() => router.push("/dashboard")} style={{ padding: "12px 28px", borderRadius: "100px", background: "#06b6d4", color: "#000", border: "none", cursor: "pointer", fontSize: "14px", fontWeight: "800" }}>
               Explore Films →
