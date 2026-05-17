@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
-const NAV_LINKS = ["Home", "Roulette", "Time-Crunch", "Watch-Party", "History"];
+const NAV_LINKS = ["Home", "Roulette", "Time-Crunch", "Watch-Party", "Watchlist", "History"];
 
 const TMDB_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
@@ -24,10 +24,7 @@ async function createPartySession() {
   const token = localStorage.getItem("token");
   const res = await fetch(`${BACKEND}/api/watch-party/create`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    },
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
     body: JSON.stringify({}),
   });
   return res.json();
@@ -37,11 +34,16 @@ async function joinPartySession(session_code) {
   const token = localStorage.getItem("token");
   const res = await fetch(`${BACKEND}/api/watch-party/join`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    },
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
     body: JSON.stringify({ session_code }),
+  });
+  return res.json();
+}
+
+async function fetchMembers(session_code) {
+  const token = localStorage.getItem("token");
+  const res = await fetch(`${BACKEND}/api/watch-party/${session_code}/members`, {
+    headers: { "Authorization": `Bearer ${token}` },
   });
   return res.json();
 }
@@ -50,16 +52,11 @@ async function addToWatchlist(tmdb_id, media_type = "movie") {
   const token = localStorage.getItem("token");
   const res = await fetch(`${BACKEND}/api/watchlist`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    },
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
     body: JSON.stringify({ tmdb_id, media_type }),
   });
   return res.json();
 }
-
-const USER_ID = 1;
 
 const IconPopcorn = ({ size = 20, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -74,10 +71,7 @@ const IconPopcorn = ({ size = 20, color = "currentColor" }) => (
 const IconParty = ({ size = 20, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M5.8 11.3 2 22l10.7-3.79"/>
-    <path d="M4 3h.01"/>
-    <path d="M22 8h.01"/>
-    <path d="M15 2h.01"/>
-    <path d="M22 20h.01"/>
+    <path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/>
     <path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12v0c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/>
     <path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11v0c-.1.6-.72.94-1.29.7L17 14"/>
     <path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98v0c-.6.1-.94.72-.7 1.29L10 7"/>
@@ -200,13 +194,14 @@ function CodeDisplay({ code }) {
   );
 }
 
-function MemberBadge({ name }) {
+function MemberBadge({ name, isNew }) {
   return (
-    <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#18181b", border: "1px solid #27272a", borderRadius: "100px", padding: "6px 14px" }}>
+    <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: isNew ? "rgba(34,211,238,0.08)" : "#18181b", border: isNew ? "1px solid rgba(34,211,238,0.4)" : "1px solid #27272a", borderRadius: "100px", padding: "6px 14px", transition: "all 0.3s" }}>
       <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "linear-gradient(135deg, #06b6d4, #3b82f6)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: "800", fontSize: "11px" }}>
         {name[0].toUpperCase()}
       </div>
-      <span style={{ color: "#a1a1aa", fontSize: "13px", fontWeight: "600" }}>{name}</span>
+      <span style={{ color: isNew ? "#22d3ee" : "#a1a1aa", fontSize: "13px", fontWeight: "600" }}>{name}</span>
+      {isNew && <span style={{ fontSize: "10px", color: "#22d3ee", fontWeight: "700" }}>NEW</span>}
     </div>
   );
 }
@@ -243,11 +238,12 @@ function ResultCard({ movie, onAdd, added }) {
 export default function WatchPartyPage() {
   const router = useRouter();
   const [activeNav, setActiveNav] = useState("Watch-Party");
-  const [username] = useState("User");
+  const [username, setUsername] = useState("User");
   const [tab, setTab] = useState("create");
   const [sessionCode, setSessionCode] = useState("");
   const [joinCode, setJoinCode] = useState("");
   const [members, setMembers] = useState([]);
+  const [prevMembers, setPrevMembers] = useState([]);
   const [sharedGenres, setSharedGenres] = useState([]);
   const [phase, setPhase] = useState("idle");
   const [spinning, setSpinning] = useState(false);
@@ -255,10 +251,43 @@ export default function WatchPartyPage() {
   const [added, setAdded] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const pollingRef = useRef(null);
+
+  // Ambil username dari localStorage
+  useEffect(() => {
+    const u = localStorage.getItem("username");
+    if (u) setUsername(u);
+  }, []);
+
+  // Polling setiap 3 detik saat di lobby
+  useEffect(() => {
+    if (phase === "lobby" && sessionCode) {
+      pollingRef.current = setInterval(async () => {
+        try {
+          const data = await fetchMembers(sessionCode);
+          if (data.members && data.members.length > 0) {
+            setMembers(prev => {
+              // Cek apakah ada perubahan
+              if (JSON.stringify(prev) !== JSON.stringify(data.members)) {
+                setPrevMembers(prev); // simpan yang lama untuk highlight
+                setTimeout(() => setPrevMembers(data.members), 3000); // reset highlight
+              }
+              return data.members; // update ke yang baru
+            });
+          }
+        } catch (e) {
+          console.error("Polling error:", e);
+        }
+      }, 2000); // polling tiap 2 detik
+    } else {
+      clearInterval(pollingRef.current);
+    }
+    return () => clearInterval(pollingRef.current);
+  }, [phase, sessionCode]);
 
   function handleNav(link) {
     setActiveNav(link);
-    const routes = { Home: "/dashboard", Roulette: "/roulette", "Time-Crunch": "/time-crunch", History: "/history" };
+    const routes = { Home: "/dashboard", Roulette: "/roulette", Watchlist: "/watchlist", "Time-Crunch": "/time-crunch", "Watchlist": "/watchlist", History: "/history" };
     if (routes[link]) router.push(routes[link]);
   }
 
@@ -267,8 +296,13 @@ export default function WatchPartyPage() {
     try {
       const data = await createPartySession();
       if (data.error) throw new Error(data.error);
+      
+      const membersData = await fetchMembers(data.session_code);
+      const initialMembers = membersData.members || [];
+      
       setSessionCode(data.session_code);
-      setMembers(["You"]);
+      setMembers(initialMembers);
+      setPrevMembers(initialMembers);
       setPhase("lobby");
     } catch (e) {
       setError(e.message || "Failed to create session");
@@ -283,6 +317,7 @@ export default function WatchPartyPage() {
       if (data.error) throw new Error(data.error);
       setSessionCode(data.session_code);
       setMembers(data.members?.length ? data.members : ["You"]);
+      setPrevMembers(data.members?.length ? data.members : ["You"]);
       setSharedGenres(data.shared_genres || []);
       setPhase("lobby");
     } catch (e) {
@@ -304,9 +339,10 @@ export default function WatchPartyPage() {
   }
 
   function handleReset() {
+    clearInterval(pollingRef.current);
     setPhase("idle"); setSessionCode(""); setJoinCode("");
-    setMembers([]); setSharedGenres([]); setResult(null);
-    setAdded(false); setError("");
+    setMembers([]); setPrevMembers([]); setSharedGenres([]);
+    setResult(null); setAdded(false); setError("");
   }
 
   const inputStyle = {
@@ -356,10 +392,9 @@ export default function WatchPartyPage() {
                 <IconPopcorn size={32} color="#22d3ee" />
               </div>
               <h1 style={{ fontSize: "32px", fontWeight: "800", marginBottom: "8px" }}>Watch Party</h1>
-              <p style={{ color: "#52525b", fontSize: "15px" }}>Get everyone on the same page — spin a film you'll all enjoy.</p>
+              <p style={{ color: "#52525b", fontSize: "15px" }}>Get everyone on the same page, spin a film you'll all enjoy.</p>
             </div>
 
-            {/* Tab switcher */}
             <div style={{ display: "flex", background: "#09090b", border: "1px solid #27272a", borderRadius: "14px", padding: "4px", marginBottom: "24px" }}>
               {[
                 { key: "create", label: "Create Party", icon: <IconCreate color={tab === "create" ? "white" : "#52525b"} /> },
@@ -372,13 +407,10 @@ export default function WatchPartyPage() {
             </div>
 
             <div style={{ background: "#18181b", border: "1px solid #27272a", borderRadius: "20px", padding: "32px" }}>
-
               {tab === "create" && (
                 <>
                   <h2 style={{ fontSize: "20px", fontWeight: "800", marginBottom: "8px" }}>Start a new session</h2>
                   <p style={{ color: "#71717a", fontSize: "14px", marginBottom: "24px" }}>Create a session and share the 6-digit code with your friends. Once everyone joins, spin together!</p>
-
-                  {/* Steps */}
                   <div style={{ background: "#09090b", border: "1px solid #27272a", borderRadius: "12px", padding: "16px", marginBottom: "24px" }}>
                     {[
                       { icon: <IconCreate color="#22d3ee" size={16} />, title: "Create session", sub: "Get a unique 6-digit code" },
@@ -394,7 +426,6 @@ export default function WatchPartyPage() {
                       </div>
                     ))}
                   </div>
-
                   {error && <p style={{ color: "#f87171", fontSize: "13px", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}><IconWarning />{error}</p>}
                   <button onClick={handleCreate} disabled={loading} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "none", cursor: loading ? "not-allowed" : "pointer", background: loading ? "#164e63" : "#06b6d4", color: loading ? "#71717a" : "#000", fontSize: "15px", fontWeight: "800", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", animation: !loading ? "pulse-glow 2s infinite" : "none" }}>
                     {loading ? <IconSpinning color="#71717a" /> : <IconCreate color="#000" size={16} />}
@@ -411,7 +442,7 @@ export default function WatchPartyPage() {
                   <input value={joinCode} onChange={e => { setJoinCode(e.target.value.toUpperCase().slice(0, 6)); setError(""); }} placeholder="AB1C2D" maxLength={6} style={{ ...inputStyle, marginBottom: "16px" }} />
                   {error && <p style={{ color: "#f87171", fontSize: "13px", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}><IconWarning />{error}</p>}
                   <button onClick={handleJoin} disabled={loading || joinCode.length < 6} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "none", cursor: (loading || joinCode.length < 6) ? "not-allowed" : "pointer", background: (loading || joinCode.length < 6) ? "#164e63" : "#06b6d4", color: (loading || joinCode.length < 6) ? "#71717a" : "#000", fontSize: "15px", fontWeight: "800", opacity: joinCode.length < 6 ? 0.5 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-                    {loading ? <IconSpinning color="#71717a" /> : <IconKey color="#000" size={16} />}
+                    {loading ? <IconSpinning color="#71ටa" /> : <IconKey color="#000" size={16} />}
                     {loading ? "Joining..." : "Join Party"}
                   </button>
                 </>
@@ -441,7 +472,9 @@ export default function WatchPartyPage() {
                   <IconUsers color="#52525b" /> Members ({members.length})
                 </p>
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                  {members.map((m, i) => <MemberBadge key={i} name={m} />)}
+                  {members.map((m, i) => (
+                    <MemberBadge key={i} name={m} isNew={!prevMembers.includes(m)} />
+                  ))}
                 </div>
               </div>
             )}
@@ -480,11 +513,9 @@ export default function WatchPartyPage() {
               <h1 style={{ fontSize: "28px", fontWeight: "800", marginBottom: "8px" }}>The Party Decides!</h1>
               <p style={{ color: "#52525b", fontSize: "14px" }}>Everyone's watching this tonight</p>
             </div>
-
             <div style={{ background: "#18181b", border: "1px solid #27272a", borderRadius: "20px", padding: "24px", marginBottom: "20px" }}>
               <ResultCard movie={result} onAdd={handleAddWatchlist} added={added} />
             </div>
-
             <div style={{ display: "flex", gap: "12px" }}>
               <button onClick={handlePartySpin} style={{ flex: 1, padding: "14px", borderRadius: "12px", border: "1px solid #27272a", background: "transparent", color: "#a1a1aa", fontSize: "14px", fontWeight: "700", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "7px" }}>
                 <IconRefresh color="#a1a1aa" /> Spin Again
