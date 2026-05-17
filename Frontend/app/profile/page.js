@@ -17,15 +17,24 @@ export default function ProfilePage() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    setUsername(localStorage.getItem("username") || "User");
-    const token = localStorage.getItem("token");
-    if (token) {
-      fetch(`${API_URL}/api/history`, { headers: { Authorization: `Bearer ${token}` } })
-        .then(r => r.json()).then(d => setHistoryCount(Array.isArray(d) ? d.length : 0)).catch(() => {});
-      fetch(`${API_URL}/api/watchlist`, { headers: { Authorization: `Bearer ${token}` } })
-        .then(r => r.json()).then(d => setWatchlistCount(Array.isArray(d) ? d.length : 0)).catch(() => {});
-    }
-  }, []);
+  setUsername(localStorage.getItem("username") || "User");
+  const token = localStorage.getItem("token");
+  if (token) {
+    fetch(`${API_URL}/api/history`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(d => {
+        if (Array.isArray(d)) {
+          // Hitung film unik berdasarkan tmdb_id
+          const unique = new Set(d.map(item => item.tmdb_id));
+          setHistoryCount(unique.size);
+        }
+      }).catch(() => {});
+    fetch(`${API_URL}/api/watchlist`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(d => setWatchlistCount(Array.isArray(d) ? d.length : 0))
+      .catch(() => {});
+  }
+}, []);
 
   function handleLogout() {
     localStorage.removeItem("token");

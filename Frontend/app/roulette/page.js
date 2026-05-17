@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Navbar from "../../components/Navbar";
 
 const TMDB_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
@@ -223,74 +224,72 @@ function SpinWheel({ segments, spinning, targetRotation }) {
     );
 }
 
-function ResultCard({ movie, onAddWatchlist, onSpinAgain, added }) {
-    if (!movie) return null;
-    const poster = "https://image.tmdb.org/t/p/w342" + movie.poster_path;
-    const rating = movie.vote_average?.toFixed(1);
-    const year = movie.release_date?.slice(0, 4);
+function ResultCard({ movie, onAddWatchlist, onSpinAgain, added, onMovieClick }) {
+  if (!movie) return null;
+  const poster = "https://image.tmdb.org/t/p/w342" + movie.poster_path;
+  const rating = movie.vote_average?.toFixed(1);
+  const year = movie.release_date?.slice(0, 4);
 
-    return (
-        <div style={{
-        background: "#18181b",
-        border: "1px solid rgba(34,211,238,0.2)",
-        borderRadius: "16px", padding: "20px",
-        boxShadow: "0 0 40px rgba(34,211,238,0.06)",
-        animation: "fadeSlideUp 0.4s ease",
-        }}>
-        <p style={{ color: "#22d3ee", fontSize: "11px", fontWeight: "700", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
-            <line x1="7" y1="2" x2="7" y2="22"/>
-            <line x1="17" y1="2" x2="17" y2="22"/>
-            <line x1="2" y1="12" x2="22" y2="12"/>
-            <line x1="2" y1="7" x2="7" y2="7"/>
-            <line x1="2" y1="17" x2="7" y2="17"/>
-            <line x1="17" y1="17" x2="22" y2="17"/>
-            <line x1="17" y1="7" x2="22" y2="7"/>
-            </svg>
-            The Wheel Chose...
-        </p>
-        <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
-            <img src={poster} alt={movie.title} style={{ width: "90px", borderRadius: "8px", flexShrink: 0, objectFit: "cover" }} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-            <h3 style={{ color: "white", fontSize: "18px", fontWeight: "800", marginBottom: "6px", lineHeight: 1.2 }}>
-                {movie.title}
-            </h3>
-            <div style={{ display: "flex", gap: "10px", marginBottom: "10px", flexWrap: "wrap" }}>
-                <span style={{ color: "#22d3ee", fontSize: "12px", fontWeight: "700" }}>★ {rating}</span>
-                {year && <span style={{ color: "#52525b", fontSize: "12px" }}>{year}</span>}
-            </div>
-            <p style={{ color: "#71717a", fontSize: "12px", lineHeight: 1.6, marginBottom: "14px", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                {movie.overview}
-            </p>
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                <button onClick={onAddWatchlist} disabled={added} style={{
-                padding: "9px 16px", borderRadius: "100px",
-                border: "none", cursor: added ? "default" : "pointer",
-                background: added ? "#14532d" : "#06b6d4",
-                color: added ? "#86efac" : "#000",
-                fontSize: "12px", fontWeight: "800", transition: "all 0.2s",
-                }}>
-                {added ? "✓ Added to Watchlist" : "+ Add to Watchlist"}
-                </button>
-                <button onClick={onSpinAgain} style={{
-                padding: "9px 16px", borderRadius: "100px",
-                border: "1px solid #27272a", cursor: "pointer",
-                background: "transparent", color: "#a1a1aa",
-                fontSize: "12px", fontWeight: "700",
-                display: "inline-flex", alignItems: "center", gap: "6px",
-                }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="1 4 1 10 7 10"/>
-                    <path d="M3.51 15a9 9 0 1 0 .49-4.95"/>
-                </svg>
-                Spin Again
-                </button>
-            </div>
-            </div>
+  return (
+    <div style={{
+      background: "#18181b", border: "1px solid rgba(34,211,238,0.2)",
+      borderRadius: "16px", padding: "20px",
+      boxShadow: "0 0 40px rgba(34,211,238,0.06)",
+      animation: "fadeSlideUp 0.4s ease",
+    }}>
+      <p style={{ color: "#22d3ee", fontSize: "11px", fontWeight: "700", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="2" width="20" height="20" rx="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/>
+        </svg>
+        The Wheel Chose...
+      </p>
+      <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+        <img
+          src={poster} alt={movie.title}
+          onClick={() => onMovieClick && onMovieClick(movie.id)}
+          style={{ width: "90px", borderRadius: "8px", flexShrink: 0, objectFit: "cover", cursor: "pointer" }}
+        />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h3
+            onClick={() => onMovieClick && onMovieClick(movie.id)}
+            style={{ color: "white", fontSize: "18px", fontWeight: "800", marginBottom: "6px", lineHeight: 1.2, cursor: "pointer" }}
+          >
+            {movie.title}
+          </h3>
+          <div style={{ display: "flex", gap: "10px", marginBottom: "10px", flexWrap: "wrap" }}>
+            <span style={{ color: "#22d3ee", fontSize: "12px", fontWeight: "700" }}>★ {rating}</span>
+            {year && <span style={{ color: "#52525b", fontSize: "12px" }}>{year}</span>}
+          </div>
+          <p style={{ color: "#71717a", fontSize: "12px", lineHeight: 1.6, marginBottom: "14px", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+            {movie.overview}
+          </p>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            <button onClick={onAddWatchlist} disabled={added} style={{
+              padding: "9px 16px", borderRadius: "100px", border: "none",
+              cursor: added ? "default" : "pointer",
+              background: added ? "#14532d" : "#06b6d4",
+              color: added ? "#86efac" : "#000",
+              fontSize: "12px", fontWeight: "800", transition: "all 0.2s",
+            }}>
+              {added ? "✓ Added to Watchlist" : "+ Add to Watchlist"}
+            </button>
+            <button onClick={onSpinAgain} style={{
+              padding: "9px 16px", borderRadius: "100px",
+              border: "1px solid #27272a", cursor: "pointer",
+              background: "transparent", color: "#a1a1aa",
+              fontSize: "12px", fontWeight: "700",
+              display: "inline-flex", alignItems: "center", gap: "6px",
+            }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/>
+              </svg>
+              Spin Again
+            </button>
+          </div>
         </div>
-        </div>
-    );
+      </div>
+    </div>
+  );
 }
 
 export default function RoulettePage() {
@@ -305,6 +304,10 @@ export default function RoulettePage() {
     const [added, setAdded] = useState(false);
     const [error, setError] = useState("");
     const USER_ID = 1;
+
+    function handleMovieClick(id) {
+    router.push(`/movie/${id}`);
+    }
 
     function handleNav(link) {
         setActiveNav(link);
@@ -381,24 +384,7 @@ export default function RoulettePage() {
         <div style={{ position: "fixed", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse at 50% 0%, rgba(6,182,212,0.07) 0%, transparent 65%)" }} />
 
         {/* Navbar */}
-        <nav style={{ position: "sticky", top: 0, zIndex: 100, background: "linear-gradient(to bottom, #09090b, rgba(9,9,11,0.95))", borderBottom: "1px solid #18181b", display: "flex", alignItems: "center", padding: "0 48px", height: "64px", gap: "40px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginRight: "16px" }}>
-            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22d3ee", display: "inline-block" }} />
-            <span style={{ color: "white", fontWeight: "800", fontSize: "18px", letterSpacing: "-0.5px" }}>FilmRoll</span>
-            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22d3ee", display: "inline-block" }} />
-            </div>
-            <div style={{ display: "flex", gap: "28px", flex: 1 }}>
-            {NAV_LINKS.map(link => (
-                <button key={link} onClick={() => handleNav(link)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", fontWeight: link === activeNav ? "700" : "500", color: link === activeNav ? "white" : "#71717a", transition: "color 0.2s", padding: "0" }}>{link}</button>
-            ))}
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
-            <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg, #06b6d4, #3b82f6)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: "800", fontSize: "14px" }}>
-                {username[0].toUpperCase()}
-            </div>
-            <span style={{ color: "#a1a1aa", fontSize: "14px" }}>{username}</span>
-            </div>
-        </nav>
+        <Navbar />
 
         {/* Content */}
         <div style={{ maxWidth: "980px", margin: "0 auto", padding: "40px 24px" }}>
@@ -542,7 +528,7 @@ export default function RoulettePage() {
             <p style={{ textAlign: "center", color: "#3f3f46", fontSize: "13px" }}>Hit SPIN to get your pick</p>
             )}
             {result && (
-            <ResultCard movie={result} onAddWatchlist={handleAddWatchlist} onSpinAgain={handleSpinAgain} added={added} />
+            <ResultCard movie={result} onAddWatchlist={handleAddWatchlist} onSpinAgain={handleSpinAgain} added={added}  onMovieClick={handleMovieClick} />
             )}
         </div>
         </main>

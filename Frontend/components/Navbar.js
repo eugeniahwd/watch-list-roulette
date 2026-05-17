@@ -21,6 +21,7 @@ const PATH_TO_NAV = {
   "/watch-party": "Watch-Party",
   "/watchlist": "Watchlist",
   "/history": "History",
+  "/profile": "",
 };
 
 export default function Navbar() {
@@ -30,12 +31,18 @@ export default function Navbar() {
   const activeNav = PATH_TO_NAV[pathname] ?? "";
 
   useEffect(() => {
-    const stored = localStorage.getItem("username");
-    if (stored) setUsername(stored);
-  }, []);
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("username");
+      if (stored) setUsername(stored);
+    }
+  }, [pathname]);
 
   function handleNav(link) {
     if (ROUTES[link]) router.push(ROUTES[link]);
+  }
+
+  function handleProfileClick() {
+    router.push("/profile");
   }
 
   return (
@@ -46,7 +53,6 @@ export default function Navbar() {
       display: "flex", alignItems: "center",
       padding: "0 48px", height: "64px", gap: "40px",
     }}>
-      {/* Logo */}
       <div
         onClick={() => router.push("/dashboard")}
         style={{ display: "flex", alignItems: "center", gap: "6px", marginRight: "16px", cursor: "pointer" }}
@@ -56,7 +62,6 @@ export default function Navbar() {
         <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22d3ee", display: "inline-block" }} />
       </div>
 
-      {/* Nav links */}
       <div style={{ display: "flex", gap: "28px", flex: 1 }}>
         {NAV_LINKS.map(link => (
           <button key={link} onClick={() => handleNav(link)} style={{
@@ -68,10 +73,9 @@ export default function Navbar() {
         ))}
       </div>
 
-      {/* User */}
-      <div
-        onClick={() => router.push("/profile")}
-        style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
+      <button
+        onClick={handleProfileClick}
+        style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", background: "none", border: "none", padding: "0" }}
       >
         <div style={{
           width: "34px", height: "34px", borderRadius: "50%",
@@ -82,7 +86,7 @@ export default function Navbar() {
           {username[0].toUpperCase()}
         </div>
         <span style={{ color: "#a1a1aa", fontSize: "14px" }}>{username}</span>
-      </div>
+      </button>
     </nav>
   );
 }

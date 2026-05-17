@@ -6,24 +6,45 @@ import Navbar from "../../components/Navbar";
 
 const IMG = "https://image.tmdb.org/t/p";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const TMDB_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 
 export default function WatchlistPage() {
   const router = useRouter();
   const [watchlist, setWatchlist] = useState([]);
 
   useEffect(() => {
+  async function load() {
     const token = localStorage.getItem("token");
     if (token) {
-      fetch(`${API_URL}/api/watchlist`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then(r => r.json())
-        .then(data => setWatchlist(Array.isArray(data) ? data : []))
-        .catch(() => loadFromLocal());
+      try {
+        const res = await fetch(`${API_URL}/api/watchlist`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          // Fetch detail film dari TMDB untuk setiap item
+          const enriched = await Promise.all(
+            data.map(async item => {
+              try {
+                const r = await fetch(`https://api.themoviedb.org/3/movie/${item.tmdb_id}?api_key=${TMDB_KEY}`);
+                const movie = await r.json();
+                return { ...item, title: movie.title, poster: movie.poster_path };
+              } catch {
+                return item;
+              }
+            })
+          );
+          setWatchlist(enriched);
+        }
+      } catch {
+        loadFromLocal();
+      }
     } else {
       loadFromLocal();
     }
-  }, []);
+  }
+  load();
+}, []);
 
   function loadFromLocal() {
     const raw = localStorage.getItem("watchlist");

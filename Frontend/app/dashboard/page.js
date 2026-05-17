@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Navbar from "../../components/Navbar";
 
 const TMDB_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 
@@ -13,14 +14,110 @@ async function fetchSection(url) {
   return data.results?.filter(m => m.poster_path) ?? [];
 }
 
+function PlusIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M12 5V19M5 12H19"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M5 12L10 17L19 8"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function BookmarkIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M19 21L12 16L5 21V5A2 2 0 017 3H17A2 2 0 0119 5V21Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function MovieCard({ movie, onMovieClick }) {
   const [showMenu, setShowMenu] = useState(false);
+  const [addedTo, setAddedTo] = useState(null);
+  useEffect(() => {
+  async function checkWatchlist() {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      const res = await fetch(
+        `${API_URL}/api/watchlist`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const list = await res.json();
+
+      const exists = list.some(
+        item =>
+          String(item.tmdb_id) ===
+          String(movie.id)
+      );
+
+      if (exists) {
+        setAddedTo("watchlist");
+      }
+
+    } else {
+      const raw =
+        localStorage.getItem("watchlist");
+
+      const list = raw
+        ? JSON.parse(raw)
+        : [];
+
+      const exists = list.some(
+        item =>
+          String(item.tmdb_id) ===
+          String(movie.id)
+      );
+
+      if (exists) {
+        setAddedTo("watchlist");
+      }
+    }
+  }
+
+  checkWatchlist();
+}, []);
+
   const title = movie.title || movie.name;
   const rating = movie.vote_average?.toFixed(1);
   const poster = `https://image.tmdb.org/t/p/w342${movie.poster_path}`;
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+
   async function addToWatchlist(e) {
+  if (addedTo === "watchlist") {
+  setShowMenu(false);
+  return;
+  }
     e.stopPropagation();
     const token = localStorage.getItem("token");
     if (token) {
@@ -37,6 +134,7 @@ function MovieCard({ movie, onMovieClick }) {
         localStorage.setItem("watchlist", JSON.stringify(list));
       }
     }
+    setAddedTo("watchlist");
     setShowMenu(false);
   }
 
@@ -57,6 +155,7 @@ function MovieCard({ movie, onMovieClick }) {
         localStorage.setItem("watch_history", JSON.stringify(list));
       }
     }
+    setAddedTo("history");
     setShowMenu(false);
   }
 
@@ -78,9 +177,8 @@ function MovieCard({ movie, onMovieClick }) {
           position: "absolute", bottom: 0, left: 0, right: 0,
           background: "linear-gradient(to top, rgba(0,0,0,0.9), transparent)",
           padding: "20px 8px 8px", borderRadius: "0 0 8px 8px",
-          pointerEvents: "none",
         }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", pointerEvents: "auto" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span
               onClick={() => onMovieClick && onMovieClick(movie.id)}
               style={{ color: "#22d3ee", fontSize: "11px", fontWeight: "700" }}
@@ -88,12 +186,14 @@ function MovieCard({ movie, onMovieClick }) {
             <button
               onClick={e => { e.stopPropagation(); setShowMenu(!showMenu); }}
               style={{
-                background: "rgba(255,255,255,0.15)", border: "none",
-                borderRadius: "50%", width: "24px", height: "24px",
-                color: "white", fontSize: "14px", cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center",
+                background: addedTo ? "rgba(34,211,238,0.3)" : "rgba(255,255,255,0.15)",
+                border: "none", borderRadius: "50%", width: "24px", height: "24px",
+                color: addedTo ? "#22d3ee" : "white",
+                fontSize: addedTo ? "12px" : "14px",
+                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
               }}
-            >+</button>
+            >
+            {addedTo ? <CheckIcon /> : <PlusIcon />}            </button>
           </div>
         </div>
 
@@ -107,15 +207,42 @@ function MovieCard({ movie, onMovieClick }) {
               boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
             }}
           >
-            <button onClick={addToWatchlist} style={{ width: "100%", padding: "10px 14px", background: "none", border: "none", color: "#a78bfa", fontSize: "13px", fontWeight: "600", cursor: "pointer", textAlign: "left" }}>
-              🔖 Add to Watchlist
+            <button onClick={addToWatchlist} style={{
+            width: "100%",
+            padding: "10px 14px",
+            background: addedTo === "watchlist"
+            ? "rgba(167,139,250,0.1)"
+            : "none",
+            border: "none",
+            color: "#a78bfa",
+            fontSize: "13px",
+            fontWeight: "600",
+            cursor: "pointer",
+            textAlign: "left",
+
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+           }}>
+              <>
+              <BookmarkIcon />
+              {addedTo === "watchlist"
+                ? "Added to Watchlist"
+                : "Add to Watchlist"}
+            </>
             </button>
             <div style={{ height: "1px", background: "#27272a" }} />
-            <button onClick={addToHistory} style={{ width: "100%", padding: "10px 14px", background: "none", border: "none", color: "#22d3ee", fontSize: "13px", fontWeight: "600", cursor: "pointer", textAlign: "left" }}>
-              ✓ Mark as Watched
+            <button onClick={addToHistory} style={{
+              width: "100%", padding: "10px 14px", background: addedTo === "history" ? "rgba(34,211,238,0.1)" : "none",
+              border: "none", color: "#22d3ee", fontSize: "13px", fontWeight: "600", cursor: "pointer", textAlign: "left",
+            }}>
+              {addedTo === "history" ? "✓ Marked as Watched" : "✓ Mark as Watched"}
             </button>
             <div style={{ height: "1px", background: "#27272a" }} />
-            <button onClick={() => setShowMenu(false)} style={{ width: "100%", padding: "10px 14px", background: "none", border: "none", color: "#52525b", fontSize: "13px", cursor: "pointer", textAlign: "left" }}>
+            <button onClick={() => setShowMenu(false)} style={{
+              width: "100%", padding: "10px 14px", background: "none",
+              border: "none", color: "#52525b", fontSize: "13px", cursor: "pointer", textAlign: "left",
+            }}>
               Cancel
             </button>
           </div>
@@ -246,42 +373,7 @@ export default function DashboardPage() {
     <main style={{ minHeight: "100vh", background: "#09090b", fontFamily: "sans-serif" }}>
 
       {/* Navbar */}
-      <nav style={{
-        position: "sticky", top: 0, zIndex: 100,
-        background: "linear-gradient(to bottom, #09090b, rgba(9,9,11,0.95))",
-        borderBottom: "1px solid #18181b",
-        display: "flex", alignItems: "center",
-        padding: "0 48px", height: "64px", gap: "40px",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginRight: "16px" }}>
-          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22d3ee", display: "inline-block" }} />
-          <span style={{ color: "white", fontWeight: "800", fontSize: "18px", letterSpacing: "-0.5px" }}>FilmRoll</span>
-          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22d3ee", display: "inline-block" }} />
-        </div>
-
-        <div style={{ display: "flex", gap: "28px", flex: 1 }}>
-          {NAV_LINKS.map(link => (
-            <button key={link} onClick={() => handleNav(link)} style={{
-              background: "none", border: "none", cursor: "pointer",
-              fontSize: "14px", fontWeight: link === activeNav ? "700" : "500",
-              color: link === activeNav ? "white" : "#71717a",
-              transition: "color 0.2s", padding: "0",
-            }}>{link}</button>
-          ))}
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
-          <div style={{
-            width: "34px", height: "34px", borderRadius: "50%",
-            background: "linear-gradient(135deg, #06b6d4, #3b82f6)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "white", fontWeight: "800", fontSize: "14px",
-          }}>
-            {username[0].toUpperCase()}
-          </div>
-          <span style={{ color: "#a1a1aa", fontSize: "14px" }}>{username}</span>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Content */}
       <div style={{ paddingTop: "32px", paddingBottom: "60px" }}>

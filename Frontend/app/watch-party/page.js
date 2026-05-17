@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-
-const NAV_LINKS = ["Home", "Roulette", "Time-Crunch", "Watch-Party", "Watchlist", "History"];
+import Navbar from "../../components/Navbar";
 
 const TMDB_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
@@ -48,7 +47,7 @@ async function fetchMembers(session_code) {
   return res.json();
 }
 
-async function addToWatchlist(tmdb_id, media_type = "movie") {
+async function addToWatchlistAPI(tmdb_id, media_type = "movie") {
   const token = localStorage.getItem("token");
   const res = await fetch(`${BACKEND}/api/watchlist`, {
     method: "POST",
@@ -58,6 +57,7 @@ async function addToWatchlist(tmdb_id, media_type = "movie") {
   return res.json();
 }
 
+// SVG Icons
 const IconPopcorn = ({ size = 20, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
@@ -67,7 +67,6 @@ const IconPopcorn = ({ size = 20, color = "currentColor" }) => (
     <line x1="14" y1="1" x2="14" y2="4"/>
   </svg>
 );
-
 const IconParty = ({ size = 20, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M5.8 11.3 2 22l10.7-3.79"/>
@@ -78,7 +77,6 @@ const IconParty = ({ size = 20, color = "currentColor" }) => (
     <path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2z"/>
   </svg>
 );
-
 const IconKey = ({ size = 14, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="7.5" cy="15.5" r="5.5"/>
@@ -86,7 +84,6 @@ const IconKey = ({ size = 14, color = "currentColor" }) => (
     <path d="m15.5 7.5 3 3L22 7l-3-3"/>
   </svg>
 );
-
 const IconCreate = ({ size = 14, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="10"/>
@@ -94,20 +91,17 @@ const IconCreate = ({ size = 14, color = "currentColor" }) => (
     <line x1="8" y1="12" x2="16" y2="12"/>
   </svg>
 );
-
 const IconCopy = ({ size = 13, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="9" y="9" width="13" height="13" rx="2"/>
     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
   </svg>
 );
-
 const IconCheck = ({ size = 13, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="20 6 9 17 4 12"/>
   </svg>
 );
-
 const IconSpin = ({ size = 18, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="10"/>
@@ -116,20 +110,17 @@ const IconSpin = ({ size = 18, color = "currentColor" }) => (
     <circle cx="12" cy="12" r="1" fill={color}/>
   </svg>
 );
-
 const IconSpinning = ({ size = 18, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin360 0.8s linear infinite" }}>
     <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
   </svg>
 );
-
 const IconRefresh = ({ size = 14, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="1 4 1 10 7 10"/>
     <path d="M3.51 15a9 9 0 1 0 .49-4.95"/>
   </svg>
 );
-
 const IconFilm = ({ size = 13, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="2" width="20" height="20" rx="2.18"/>
@@ -142,7 +133,6 @@ const IconFilm = ({ size = 13, color = "currentColor" }) => (
     <line x1="17" y1="7" x2="22" y2="7"/>
   </svg>
 );
-
 const IconUsers = ({ size = 13, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -151,13 +141,11 @@ const IconUsers = ({ size = 13, color = "currentColor" }) => (
     <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
   </svg>
 );
-
 const IconHandshake = ({ size = 13, color = "currentColor" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0C1.46 6.7 1.33 10.28 4 13l8 8 8-8c2.67-2.72 2.54-6.3.42-8.42z"/>
   </svg>
 );
-
 const IconWarning = ({ size = 14, color = "#f87171" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
@@ -206,19 +194,26 @@ function MemberBadge({ name, isNew }) {
   );
 }
 
-function ResultCard({ movie, onAdd, added }) {
+function ResultCard({ movie, onAdd, added, onMovieClick }) {
   if (!movie) return null;
   const poster = `https://image.tmdb.org/t/p/w342${movie.poster_path}`;
   const rating = movie.vote_average?.toFixed(1);
   const year = movie.release_date?.slice(0, 4);
   return (
     <div style={{ display: "flex", gap: "16px", background: "#18181b", border: "1px solid #22d3ee33", borderRadius: "14px", padding: "16px", animation: "fadeUp 0.4s ease" }}>
-      <img src={poster} alt={movie.title} style={{ width: "80px", borderRadius: "8px", objectFit: "cover", flexShrink: 0 }} />
+      <img
+        src={poster} alt={movie.title}
+        onClick={() => onMovieClick && onMovieClick(movie.id)}
+        style={{ width: "80px", borderRadius: "8px", objectFit: "cover", flexShrink: 0, cursor: "pointer" }}
+      />
       <div style={{ flex: 1 }}>
         <p style={{ color: "#22d3ee", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "6px", display: "flex", alignItems: "center", gap: "5px" }}>
           <IconFilm color="#22d3ee" /> The Party Picks...
         </p>
-        <h3 style={{ color: "white", fontWeight: "800", fontSize: "18px", marginBottom: "4px" }}>{movie.title}</h3>
+        <h3
+          onClick={() => onMovieClick && onMovieClick(movie.id)}
+          style={{ color: "white", fontWeight: "800", fontSize: "18px", marginBottom: "4px", cursor: "pointer" }}
+        >{movie.title}</h3>
         <div style={{ display: "flex", gap: "10px", marginBottom: "8px" }}>
           <span style={{ color: "#22d3ee", fontSize: "12px", fontWeight: "700" }}>★ {rating}</span>
           {year && <span style={{ color: "#52525b", fontSize: "12px" }}>{year}</span>}
@@ -237,8 +232,6 @@ function ResultCard({ movie, onAdd, added }) {
 
 export default function WatchPartyPage() {
   const router = useRouter();
-  const [activeNav, setActiveNav] = useState("Watch-Party");
-  const [username, setUsername] = useState("User");
   const [tab, setTab] = useState("create");
   const [sessionCode, setSessionCode] = useState("");
   const [joinCode, setJoinCode] = useState("");
@@ -253,19 +246,11 @@ export default function WatchPartyPage() {
   const [loading, setLoading] = useState(false);
   const pollingRef = useRef(null);
 
-  // Ambil username dari localStorage
-  useEffect(() => {
-    const u = localStorage.getItem("username");
-    if (u) setUsername(u);
-  }, []);
-
   useEffect(() => {
     if (phase === "lobby" && sessionCode) {
       pollingRef.current = setInterval(async () => {
         try {
           const data = await fetchState(sessionCode);
-
-          // Update members
           if (data.members?.length > 0) {
             setMembers(prev => {
               if (JSON.stringify(prev) !== JSON.stringify(data.members)) {
@@ -275,7 +260,6 @@ export default function WatchPartyPage() {
               return data.members;
             });
           }
-
           if (data.spin_result && phase === "lobby") {
             const movie = await fetchMovieById(data.spin_result);
             setResult(movie);
@@ -292,21 +276,13 @@ export default function WatchPartyPage() {
     return () => clearInterval(pollingRef.current);
   }, [phase, sessionCode]);
 
-  function handleNav(link) {
-    setActiveNav(link);
-    const routes = { Home: "/dashboard", Roulette: "/roulette", Watchlist: "/watchlist", "Time-Crunch": "/time-crunch", "Watchlist": "/watchlist", History: "/history" };
-    if (routes[link]) router.push(routes[link]);
-  }
-
   async function handleCreate() {
     setLoading(true); setError("");
     try {
       const data = await createPartySession();
       if (data.error) throw new Error(data.error);
-      
       const membersData = await fetchMembers(data.session_code);
       const initialMembers = membersData.members || [];
-      
       setSessionCode(data.session_code);
       setMembers(initialMembers);
       setPrevMembers(initialMembers);
@@ -335,17 +311,33 @@ export default function WatchPartyPage() {
   async function handlePartySpin() {
     const genres = sharedGenres.length > 0 ? sharedGenres : ["Action", "Drama", "Comedy"];
     setSpinning(true); setResult(null); setAdded(false);
-    const movie = await spinRoulette({ genres });
-    setTimeout(() => { setSpinning(false); setResult(movie); setPhase("result"); }, 2000);
+    try {
+      const movie = await spinRoulette({ genres });
+      if (movie) {
+        // Simpan hasil spin ke backend agar tersync ke semua member
+        await saveSpinResult(sessionCode, movie.id);
+      }
+      setTimeout(() => {
+        setSpinning(false);
+        setResult(movie);
+        setPhase("result");
+      }, 2000);
+    } catch (e) {
+      setSpinning(false);
+      console.error(e);
+    }
   }
 
   async function handleAddWatchlist() {
     if (!result) return;
-    await addToWatchlist(result.id, "movie");
+    await addToWatchlistAPI(result.id, "movie");
     setAdded(true);
   }
 
-  // fungsi fetch state
+  function handleMovieClick(id) {
+    router.push(`/movie/${id}`);
+  }
+
   async function fetchState(session_code) {
     const token = localStorage.getItem("token");
     const res = await fetch(`${BACKEND}/api/watch-party/${session_code}/state`, {
@@ -354,7 +346,6 @@ export default function WatchPartyPage() {
     return res.json();
   }
 
-  // fungsi save spin result ke BE
   async function saveSpinResult(session_code, tmdb_id) {
     const token = localStorage.getItem("token");
     await fetch(`${BACKEND}/api/watch-party/${session_code}/spin`, {
@@ -364,13 +355,11 @@ export default function WatchPartyPage() {
     });
   }
 
-  // fungsi fetch movie dari TMDB by ID
   async function fetchMovieById(tmdb_id) {
-    const res = await fetch(
-      `https://api.themoviedb.org/3/movie/${tmdb_id}?api_key=${TMDB_KEY}`
-    );
+    const res = await fetch(`https://api.themoviedb.org/3/movie/${tmdb_id}?api_key=${TMDB_KEY}`);
     return res.json();
   }
+
   function handleReset() {
     clearInterval(pollingRef.current);
     setPhase("idle"); setSessionCode(""); setJoinCode("");
@@ -395,25 +384,7 @@ export default function WatchPartyPage() {
 
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse at 50% 0%, rgba(6,182,212,0.07) 0%, transparent 70%)" }} />
 
-      {/* Navbar */}
-      <nav style={{ position: "sticky", top: 0, zIndex: 100, background: "linear-gradient(to bottom, #09090b, rgba(9,9,11,0.95))", borderBottom: "1px solid #18181b", display: "flex", alignItems: "center", padding: "0 48px", height: "64px", gap: "40px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginRight: "16px" }}>
-          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22d3ee", display: "inline-block" }} />
-          <span style={{ color: "white", fontWeight: "800", fontSize: "18px", letterSpacing: "-0.5px" }}>FilmRoll</span>
-          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22d3ee", display: "inline-block" }} />
-        </div>
-        <div style={{ display: "flex", gap: "28px", flex: 1 }}>
-          {NAV_LINKS.map(link => (
-            <button key={link} onClick={() => handleNav(link)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", fontWeight: link === activeNav ? "700" : "500", color: link === activeNav ? "white" : "#71717a", transition: "color 0.2s", padding: "0" }}>{link}</button>
-          ))}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
-          <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg, #06b6d4, #3b82f6)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: "800", fontSize: "14px" }}>
-            {username[0].toUpperCase()}
-          </div>
-          <span style={{ color: "#a1a1aa", fontSize: "14px" }}>{username}</span>
-        </div>
-      </nav>
+      <Navbar />
 
       <div style={{ maxWidth: "540px", margin: "0 auto", padding: "48px 24px" }}>
 
@@ -443,7 +414,7 @@ export default function WatchPartyPage() {
               {tab === "create" && (
                 <>
                   <h2 style={{ fontSize: "20px", fontWeight: "800", marginBottom: "8px" }}>Start a new session</h2>
-                  <p style={{ color: "#71717a", fontSize: "14px", marginBottom: "24px" }}>Create a session and share the 6-digit code with your friends. Once everyone joins, spin together!</p>
+                  <p style={{ color: "#71717a", fontSize: "14px", marginBottom: "24px" }}>Create a session and share the 6-digit code with your friends.</p>
                   <div style={{ background: "#09090b", border: "1px solid #27272a", borderRadius: "12px", padding: "16px", marginBottom: "24px" }}>
                     {[
                       { icon: <IconCreate color="#22d3ee" size={16} />, title: "Create session", sub: "Get a unique 6-digit code" },
@@ -475,7 +446,7 @@ export default function WatchPartyPage() {
                   <input value={joinCode} onChange={e => { setJoinCode(e.target.value.toUpperCase().slice(0, 6)); setError(""); }} placeholder="AB1C2D" maxLength={6} style={{ ...inputStyle, marginBottom: "16px" }} />
                   {error && <p style={{ color: "#f87171", fontSize: "13px", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}><IconWarning />{error}</p>}
                   <button onClick={handleJoin} disabled={loading || joinCode.length < 6} style={{ width: "100%", padding: "14px", borderRadius: "12px", border: "none", cursor: (loading || joinCode.length < 6) ? "not-allowed" : "pointer", background: (loading || joinCode.length < 6) ? "#164e63" : "#06b6d4", color: (loading || joinCode.length < 6) ? "#71717a" : "#000", fontSize: "15px", fontWeight: "800", opacity: joinCode.length < 6 ? 0.5 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-                    {loading ? <IconSpinning color="#71ටa" /> : <IconKey color="#000" size={16} />}
+                    {loading ? <IconSpinning color="#71717a" /> : <IconKey color="#000" size={16} />}
                     {loading ? "Joining..." : "Join Party"}
                   </button>
                 </>
@@ -547,7 +518,12 @@ export default function WatchPartyPage() {
               <p style={{ color: "#52525b", fontSize: "14px" }}>Everyone's watching this tonight</p>
             </div>
             <div style={{ background: "#18181b", border: "1px solid #27272a", borderRadius: "20px", padding: "24px", marginBottom: "20px" }}>
-              <ResultCard movie={result} onAdd={handleAddWatchlist} added={added} />
+              <ResultCard
+                movie={result}
+                onAdd={handleAddWatchlist}
+                added={added}
+                onMovieClick={handleMovieClick}
+              />
             </div>
             <div style={{ display: "flex", gap: "12px" }}>
               <button onClick={handlePartySpin} style={{ flex: 1, padding: "14px", borderRadius: "12px", border: "1px solid #27272a", background: "transparent", color: "#a1a1aa", fontSize: "14px", fontWeight: "700", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "7px" }}>
