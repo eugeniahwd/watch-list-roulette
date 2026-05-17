@@ -297,7 +297,7 @@ http://localhost:3000
 
 ## Team
 
-| Nama | NIM | Tugas |
+| Nama | NPM | Tugas |
 |---|---|---|
 | Eugenia Huwaida Imtinan| 2406421384 | Frontend (Dashboard, History), Project Lead |
 | Nadia Izzati | 2406487033 | Frontend (Roulette, Watch-Party), API Watchlist & History |
