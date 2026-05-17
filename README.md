@@ -116,17 +116,17 @@ Data film diambil secara *real-time* dari **TMDB API** (The Movie Database), sem
 ## 📊Diagrams
 
 ### ERD (Entity Relationship Diagram)
-> ![ERD FilmRoll](https://hackmd.io/_uploads/B1JikSPyMg.png)
+> ![alt text](<ERD FilmRoll.png>)
 ---
 
 ### UML (Class Diagram)
-> ![image](https://hackmd.io/_uploads/r1EkZHwyzx.png)
+> ![alt text](<UML FilmRoll.png>)
 
 
 ---
 
 ### Flowchart
-> ![Flowchart FilmRoll](https://hackmd.io/_uploads/SJLzWSDkzg.png)
+> ![alt text](<Flowchart FilmRoll.png>)
 
 ---
 
