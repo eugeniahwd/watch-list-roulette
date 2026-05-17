@@ -22,18 +22,53 @@ export default function HistoryPage() {
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      fetch(`${API_URL}/api/history`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then(r => r.json())
-        .then(data => setHistory(Array.isArray(data) ? data : []))
-        .catch(() => loadFromLocal());
-    } else {
-      loadFromLocal();
-    }
-  }, []);
+  console.log("API_URL:", API_URL);  // tambah ini
+  const token = localStorage.getItem("token");
+  console.log("token:", token);
+  if (token) {
+    fetch(`${API_URL}/api/history`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => {
+  console.log("API status:", r.status);
+  return r.json();
+})
+      .then(async (data) => {
+  console.log("API data:", data);
+  if (!Array.isArray(data)) return loadFromLocal();
+  
+  const TMDB_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+  const detailed = await Promise.all(
+    data.map(async (item) => {
+      try {
+        const res = await fetch(
+          `https://api.themoviedb.org/3/${item.media_type}/${item.tmdb_id}?api_key=${TMDB_KEY}`
+        );
+        const movie = await res.json();
+        console.log("TMDB result:", movie);
+        return {
+          ...item,
+          title: movie.title || movie.name,
+          poster_path: movie.poster_path,
+          rating: item.rating ?? 0,
+        };
+      } catch (err) {
+        console.log("TMDB fetch error:", err);
+        return item;
+      }
+    })
+  );
+  console.log("detailed:", detailed);
+  setHistory(detailed);
+})
+      .catch((err) => {
+  console.log("Fetch error:", err);
+  loadFromLocal();
+});
+  } else {
+    loadFromLocal();
+  }
+}, []);
 
   function loadFromLocal() {
     const raw = localStorage.getItem("watch_history");
