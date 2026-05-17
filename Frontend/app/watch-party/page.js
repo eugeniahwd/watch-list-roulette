@@ -259,26 +259,33 @@ export default function WatchPartyPage() {
     if (u) setUsername(u);
   }, []);
 
-  // Polling setiap 3 detik saat di lobby
   useEffect(() => {
     if (phase === "lobby" && sessionCode) {
       pollingRef.current = setInterval(async () => {
         try {
-          const data = await fetchMembers(sessionCode);
-          if (data.members && data.members.length > 0) {
+          const data = await fetchState(sessionCode);
+
+          // Update members
+          if (data.members?.length > 0) {
             setMembers(prev => {
-              // Cek apakah ada perubahan
               if (JSON.stringify(prev) !== JSON.stringify(data.members)) {
-                setPrevMembers(prev); // simpan yang lama untuk highlight
-                setTimeout(() => setPrevMembers(data.members), 3000); // reset highlight
+                setPrevMembers(prev);
+                setTimeout(() => setPrevMembers(data.members), 3000);
               }
-              return data.members; // update ke yang baru
+              return data.members;
             });
+          }
+
+          if (data.spin_result && phase === "lobby") {
+            const movie = await fetchMovieById(data.spin_result);
+            setResult(movie);
+            setPhase("result");
+            clearInterval(pollingRef.current);
           }
         } catch (e) {
           console.error("Polling error:", e);
         }
-      }, 2000); // polling tiap 2 detik
+      }, 2000);
     } else {
       clearInterval(pollingRef.current);
     }
@@ -338,6 +345,32 @@ export default function WatchPartyPage() {
     setAdded(true);
   }
 
+  // fungsi fetch state
+  async function fetchState(session_code) {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${BACKEND}/api/watch-party/${session_code}/state`, {
+      headers: { "Authorization": `Bearer ${token}` },
+    });
+    return res.json();
+  }
+
+  // fungsi save spin result ke BE
+  async function saveSpinResult(session_code, tmdb_id) {
+    const token = localStorage.getItem("token");
+    await fetch(`${BACKEND}/api/watch-party/${session_code}/spin`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify({ tmdb_id }),
+    });
+  }
+
+  // fungsi fetch movie dari TMDB by ID
+  async function fetchMovieById(tmdb_id) {
+    const res = await fetch(
+      `https://api.themoviedb.org/3/movie/${tmdb_id}?api_key=${TMDB_KEY}`
+    );
+    return res.json();
+  }
   function handleReset() {
     clearInterval(pollingRef.current);
     setPhase("idle"); setSessionCode(""); setJoinCode("");
