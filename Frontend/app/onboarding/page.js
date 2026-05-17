@@ -215,7 +215,7 @@ export default function OnboardingPage() {
       body: JSON.stringify({
         genres: [...selectedGenres],
         platforms: [...selectedPlatforms],
-        pref_mood: mood,
+        pref_mood: mood === "film" ? "movie" : mood,
       }),
     });
 

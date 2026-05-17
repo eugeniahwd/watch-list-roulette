@@ -255,7 +255,7 @@ export default function DashboardPage() {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "6px", marginRight: "16px" }}>
           <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22d3ee", display: "inline-block" }} />
-          <span style={{ color: "white", fontWeight: "800", fontSize: "18px", letterSpacing: "-0.5px" }}>Roulette</span>
+          <span style={{ color: "white", fontWeight: "800", fontSize: "18px", letterSpacing: "-0.5px" }}>FilmRoll</span>
           <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22d3ee", display: "inline-block" }} />
         </div>
 
