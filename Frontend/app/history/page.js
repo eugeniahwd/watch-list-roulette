@@ -102,13 +102,17 @@ export default function HistoryPage() {
         <div style={{ marginBottom: "32px" }}>
           <h1 style={{ fontSize: "28px", fontWeight: "800", marginBottom: "6px" }}>Your Watch History</h1>
           <p style={{ color: "#71717a", fontSize: "14px" }}>
-            {history.length > 0 ? `${history.length} film sudah kamu tonton` : "Belum ada film yang ditonton"}
+            {history.length > 0 ? `${history.length} films watched` : "No films watched yet"}
           </p>
         </div>
 
         {history.length === 0 && (
           <div style={{ textAlign: "center", padding: "80px 24px", background: "#18181b", border: "1px solid #27272a", borderRadius: "20px" }}>
-            <span style={{ fontSize: "48px", display: "block", marginBottom: "16px" }}>🎬</span>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: "block", margin: "0 auto 16px" }}>
+              <rect x="2" y="4" width="20" height="16" rx="2" stroke="#52525b" strokeWidth="1.5"/>
+              <path d="M2 8h20" stroke="#52525b" strokeWidth="1.5"/>
+              <path d="M7 4v4M12 4v4M17 4v4M7 8v12M12 8v12M17 8v12" stroke="#52525b" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
             <p style={{ color: "#52525b", fontSize: "16px", marginBottom: "20px" }}>Kamu belum menonton film apapun.</p>
             <button onClick={() => router.push("/dashboard")} style={{ padding: "12px 28px", borderRadius: "100px", background: "#06b6d4", color: "#000", border: "none", cursor: "pointer", fontSize: "14px", fontWeight: "800" }}>
               Explore Films →
