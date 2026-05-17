@@ -18,11 +18,11 @@ router.get('/', auth, async (req, res) => {
 
 // POST /api/history
 router.post('/', auth, async (req, res) => {
-  const { tmdb_id, media_type = 'movie' } = req.body;
+  const { tmdb_id, media_type = 'movie', rating = 0 } = req.body;
   try {
     const result = await pool.query(
-      'INSERT INTO watch_history (user_id, tmdb_id, media_type) VALUES ($1, $2, $3) RETURNING *',
-      [req.user.user_id, tmdb_id, media_type]
+      'INSERT INTO watch_history (user_id, tmdb_id, media_type, rating) VALUES ($1, $2, $3, $4) RETURNING *',
+      [req.user.user_id, tmdb_id, media_type, rating]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {

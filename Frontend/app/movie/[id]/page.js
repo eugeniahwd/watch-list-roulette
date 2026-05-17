@@ -75,32 +75,50 @@ export default function MovieDetailPage() {
   setInWatchlist(watchlist.some(w => w.tmdb_id === id));
   }, [id]);
 
-  function handleSave() {
-    localStorage.setItem(`movie_${id}`, JSON.stringify({
-      watched,
-      rating,
-      tmdb_id: id,
-      title: movie?.title,
-      poster: movie?.poster_path,
-      savedAt: new Date().toISOString(),
-    }));
+  async function handleSave() {
+  const token = localStorage.getItem("token");
 
-    const historyRaw = localStorage.getItem("watch_history");
-    const history = historyRaw ? JSON.parse(historyRaw) : [];
-    const exists = history.find(h => h.tmdb_id === id);
-    if (!exists && watched) {
-      history.unshift({
-        tmdb_id: id,
-        title: movie?.title,
-        poster: movie?.poster_path,
-        rating,
-        watched_at: new Date().toISOString(),
-      });
-      localStorage.setItem("watch_history", JSON.stringify(history));
-    }
+  // Simpan ke localStorage
+  localStorage.setItem(`movie_${id}`, JSON.stringify({
+    watched, rating, tmdb_id: id,
+    title: movie?.title, poster: movie?.poster_path,
+    savedAt: new Date().toISOString(),
+  }));
 
-    setAlreadySaved(true);
+  const historyRaw = localStorage.getItem("watch_history");
+  const history = historyRaw ? JSON.parse(historyRaw) : [];
+  const exists = history.find(h => h.tmdb_id === id);
+  if (!exists && watched) {
+    history.unshift({
+      tmdb_id: id, title: movie?.title,
+      poster: movie?.poster_path, rating,
+      watched_at: new Date().toISOString(),
+    });
+    localStorage.setItem("watch_history", JSON.stringify(history));
   }
+
+  // POST ke backend kalau ada token
+  if (token && watched) {
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/history`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+        tmdb_id: parseInt(id),
+        media_type: "movie",
+        rating: rating, 
+        }),
+      });
+    } catch (err) {
+      console.error("Gagal simpan ke backend:", err);
+    }
+  }
+
+  setAlreadySaved(true);
+}
 
   function handleWatchlist() {
   const watchlistRaw = localStorage.getItem("watchlist");
